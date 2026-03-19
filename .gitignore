@@ -1,0 +1,26 @@
+# Environment variables (sensitive)
+.env
+docker/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Collector state (local per-machine)
+*-state.json
+*-failures.jsonl
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (if local)
+pgdata/
+grafana_data/

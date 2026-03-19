@@ -1,0 +1,312 @@
+{
+  "title": "TSP Team - Claude Usage Dashboard",
+  "uid": "claude-usage",
+  "description": "TSP Team (tsp-01 ~ tsp-05) Claude Code Max usage pattern monitoring",
+  "tags": ["claude", "tsp"],
+  "timezone": "browser",
+  "refresh": "1m",
+  "style": "light",
+  "time": { "from": "now/d", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+
+    {
+      "id": 100,
+      "type": "row",
+      "title": "TODAY OVERVIEW",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 1,
+      "title": "Today Prompts",
+      "description": "Total prompt count today (team)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 1000}, {"color": "#F2495C", "value": 1500}] },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+    {
+      "id": 2,
+      "title": "Today Est. Tokens",
+      "description": "Actual collected token total today",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"tokens\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 3000000}, {"color": "#F2495C", "value": 4500000}] },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+    {
+      "id": 3,
+      "title": "Today Active Hours",
+      "description": "Team total active hours (first~last message span per user)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"hours\" FROM (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 30}, {"color": "#F2495C", "value": 40}] },
+          "unit": "h",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+    {
+      "id": 4,
+      "title": "This Week Prompts",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"prompts\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+    {
+      "id": 5,
+      "title": "This Week Tokens",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"tokens\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+    {
+      "id": 6,
+      "title": "This Week Hours",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"hours\" FROM (SELECT user_name, created_at::date AS day, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name, created_at::date) t", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "unit": "h",
+          "noValue": "0"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"] }, "justifyMode": "center" }
+    },
+
+    {
+      "id": 101,
+      "type": "row",
+      "title": "PER USER - tsp-01 ~ tsp-05",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "title": "User Prompts Today",
+      "description": "Per-user prompt count today",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(c.cnt, 0) AS \"Prompts\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 300}, {"color": "#F2495C", "value": 400}] },
+          "min": 0,
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Prompts$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "Prompts", "handlerKey": "field.value" }] } }]
+    },
+    {
+      "id": 11,
+      "title": "User Active Hours Today",
+      "description": "Per-user active hours (first~last message span)",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(ROUND(c.hours::numeric, 1), 0) AS \"Hours\" FROM users u LEFT JOIN (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 8}, {"color": "#F2495C", "value": 10}] },
+          "min": 0,
+          "unit": "h",
+          "noValue": "0"
+        }
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Hours$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "Hours", "handlerKey": "field.value" }] } }]
+    },
+    {
+      "id": 12,
+      "title": "Prompt/Hour (Automation Alert)",
+      "description": "> 40/hr may indicate automated scripts",
+      "type": "bargauge",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 7 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(ROUND(c.cnt::numeric / GREATEST(c.hours, 0.1), 1), 0) AS \"P/Hr\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 40}, {"color": "#F2495C", "value": 50}] },
+          "min": 0,
+          "unit": "short",
+          "noValue": "0"
+        }
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^P\\/Hr$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "P/Hr", "handlerKey": "field.value" }] } }]
+    },
+
+    {
+      "id": 102,
+      "type": "row",
+      "title": "USAGE PATTERN",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
+      "collapsed": false
+    },
+    {
+      "id": 20,
+      "title": "Hourly Prompt Activity (Today by User)",
+      "description": "Stacked bar: who is using Claude each hour",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT date_trunc('hour', created_at) AS \"time\", user_name AS metric, COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY 1, user_name ORDER BY 1", "format": "time_series" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 0, "fillOpacity": 80, "pointSize": 5, "showPoints": "always", "stacking": { "mode": "normal" }, "drawStyle": "bars", "barAlignment": 0 },
+          "unit": "short"
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "right" }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+
+    {
+      "id": 21,
+      "title": "Daily Prompt Trend (30 days)",
+      "description": "Daily prompt count per user over the last 30 days",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 14, "x": 0, "y": 24 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT created_at::date AS \"time\", user_name AS metric, COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at >= NOW() - INTERVAL '30 days' GROUP BY created_at::date, user_name ORDER BY 1", "format": "time_series" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "showPoints": "auto", "spanNulls": true },
+          "unit": "short"
+        }
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum", "mean", "max"] }, "tooltip": { "mode": "multi", "sort": "desc" } }
+    },
+    {
+      "id": 22,
+      "title": "User Summary Table",
+      "description": "Comprehensive per-user stats",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 10, "x": 14, "y": 24 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(t.today_prompts, 0) AS \"Today\", COALESCE(t.today_tokens, 0) AS \"Tokens\", COALESCE(ROUND(t.today_hours::numeric, 1), 0) AS \"Hours\", COALESCE(ROUND(t.today_prompts::numeric / GREATEST(t.today_hours, 0.1), 0), 0) AS \"P/Hr\", COALESCE(w.week_prompts, 0) AS \"Week\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS today_prompts, SUM(total_tokens) AS today_tokens, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS today_hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t ON u.user_name = t.user_name LEFT JOIN (SELECT user_name, COUNT(*) AS week_prompts FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name) w ON u.user_name = w.user_name ORDER BY u.user_name", "format": "table" }],
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Today" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 200}, {"color": "red", "value": 400}] } }] },
+          { "matcher": { "id": "byName", "options": "P/Hr" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 30}, {"color": "red", "value": 50}] } }] },
+          { "matcher": { "id": "byName", "options": "Tokens" }, "properties": [{ "id": "unit", "value": "short" }] },
+          { "matcher": { "id": "byName", "options": "Hours" }, "properties": [{ "id": "unit", "value": "h" }] }
+        ]
+      },
+      "options": { "showHeader": true, "cellHeight": "md", "footer": { "enablePagination": false, "show": true, "reducer": ["sum"] } }
+    },
+
+    {
+      "id": 103,
+      "type": "row",
+      "title": "PROJECT & MODEL",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
+      "collapsed": false
+    },
+    {
+      "id": 30,
+      "title": "Project Usage",
+      "type": "table",
+      "gridPos": { "h": 7, "w": 14, "x": 0, "y": 33 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(project,'(none)') AS \"Project\", COUNT(*) AS \"Prompts\", SUM(total_tokens) AS \"Tokens\", COUNT(DISTINCT user_name) AS \"Users\" FROM claude_usage GROUP BY project ORDER BY \"Prompts\" DESC LIMIT 20", "format": "table" }],
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Prompts" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] }
+        ]
+      },
+      "options": { "showHeader": true, "cellHeight": "sm", "footer": { "enablePagination": false, "show": true, "reducer": ["sum"] } }
+    },
+    {
+      "id": 31,
+      "title": "Model Distribution",
+      "type": "piechart",
+      "gridPos": { "h": 7, "w": 10, "x": 14, "y": 33 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(model,'unknown') AS \"Model\", COUNT(*) AS \"Prompts\" FROM claude_usage GROUP BY model ORDER BY \"Prompts\" DESC", "format": "table" }],
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "tooltip": { "mode": "single" }, "pieType": "donut", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Prompts$/" } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "Model", "handlerKey": "field.name" }, { "fieldName": "Prompts", "handlerKey": "field.value" }] } }]
+    },
+
+    {
+      "id": 104,
+      "type": "row",
+      "title": "RECENT ACTIVITY",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+      "collapsed": false
+    },
+    {
+      "id": 40,
+      "title": "Recent Prompts (Today)",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+      "datasource": { "type": "postgres", "uid": "postgres" },
+      "targets": [{ "refId": "A", "rawSql": "SELECT user_name AS \"User\", project AS \"Project\", model AS \"Model\", input_tokens AS \"In\", output_tokens AS \"Out\", total_tokens AS \"Total\", created_at AS \"Time\" FROM claude_usage WHERE created_at::date = CURRENT_DATE ORDER BY created_at DESC LIMIT 200", "format": "table" }],
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Total" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] },
+          { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "unit", "value": "dateTimeAsIso" }] }
+        ]
+      },
+      "options": { "showHeader": true, "cellHeight": "sm", "footer": { "enablePagination": true, "show": true, "reducer": ["sum"], "countRows": true } }
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 3
+}
