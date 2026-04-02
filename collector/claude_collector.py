@@ -89,23 +89,11 @@ def _match_slug_recursive(slug: str, base_path: str, depth: int = 0) -> str | No
 _slug_cache: dict = {}
 
 
-def _extract_workspace_project(full_path: str) -> str:
-    """Extract path from workspace onward.
-    e.g. '/home/tsp-02/workspace/claude_dashboard' -> 'workspace/claude_dashboard'
-         '/home/tsp-02/workspace' -> 'workspace'
-    """
-    import re
-    m = re.search(r'/(workspace(?:/.*)?)$', full_path)
-    if m:
-        return m.group(1)
-    return full_path
-
-
 def decode_project_slug(slug: str, claude_home: str = None) -> str:
     """Convert Claude project slug back to filesystem path.
 
     Uses filesystem lookup to correctly handle path components containing dashes.
-    Returns workspace-relative project name (e.g. 'claude_dashboard').
+    Returns full path (e.g. '/home/tsp-02/workspace/claude_dashboard').
     """
     if not slug or slug == "-":
         return "(root)"
@@ -115,17 +103,15 @@ def decode_project_slug(slug: str, claude_home: str = None) -> str:
     home = os.path.expanduser("~")
     result = _match_slug_recursive(slug, home)
     if result:
-        short = _extract_workspace_project(result)
-        _slug_cache[slug] = short
-        return short
+        _slug_cache[slug] = result
+        return result
 
     # Fallback: naive replacement
     path = slug.replace("-", "/")
     if slug.startswith("-"):
         path = "/" + path[1:]
-    short = _extract_workspace_project(path)
-    _slug_cache[slug] = short
-    return short
+    _slug_cache[slug] = path
+    return path or slug
 
 
 def collect_from_file(
