@@ -27,24 +27,89 @@ FAILURES_FILE = os.path.expanduser("~/.claude-usage-collector-failures.jsonl")
 BATCH_SIZE = 100
 
 
-def decode_project_slug(slug: str) -> str:
-    """Convert URL-encoded project path back to filesystem path.
+def _encode_path_to_slug(path: str) -> str:
+    """Encode a filesystem path to Claude's slug format.
+    Claude replaces '/' and '_' (and possibly other non-alnum chars) with '-'."""
+    import re
+    return re.sub(r'[/_]', '-', path)
 
-    Claude stores project dirs like '-home-tsp--03-workspace' where '--' escapes
-    a literal dash. We split on single '-' (path separator) and rejoin with '/'.
+
+def _build_slug_map(claude_home: str) -> dict:
+    """Build a reverse map from slug -> real path by walking up from claude_home.
+
+    Claude encodes project paths as slugs by replacing '/' with '-'.
+    We reconstruct by finding real directories that match each slug.
+    """
+    slug_map = {}
+    projects_dir = Path(claude_home) / "projects"
+    if not projects_dir.is_dir():
+        return slug_map
+
+    for proj_dir in projects_dir.iterdir():
+        if not proj_dir.is_dir():
+            continue
+        slug = proj_dir.name
+        # The slug is the absolute path with / replaced by -
+        # Try to find the real path by checking if encoded real path matches
+        # Walk common base directories
+        home = os.path.expanduser("~")
+        # Try known path prefixes and walk subdirs
+        for base in [home]:
+            result = _match_slug_recursive(slug, base)
+            if result:
+                slug_map[slug] = result
+                break
+    return slug_map
+
+
+def _match_slug_recursive(slug: str, base_path: str, depth: int = 0) -> str | None:
+    """Try to match a slug against real filesystem paths starting from base_path."""
+    if depth > 10:
+        return None
+    encoded_base = _encode_path_to_slug(base_path)
+    if encoded_base == slug:
+        return base_path
+    # Check if slug starts with encoded base
+    if not slug.startswith(encoded_base + "-") and not slug.startswith(encoded_base):
+        return None
+    if not os.path.isdir(base_path):
+        return None
+    try:
+        for entry in os.scandir(base_path):
+            if entry.is_dir(follow_symlinks=False):
+                result = _match_slug_recursive(slug, os.path.join(base_path, entry.name), depth + 1)
+                if result:
+                    return result
+    except PermissionError:
+        pass
+    return None
+
+
+# Module-level cache
+_slug_cache: dict = {}
+
+
+def decode_project_slug(slug: str, claude_home: str = None) -> str:
+    """Convert Claude project slug back to filesystem path.
+
+    Uses filesystem lookup to correctly handle path components containing dashes.
     """
     if not slug or slug == "-":
         return "(root)"
-    # Claude CLI encodes paths: '/' -> '-', literal '-' -> '--'
-    # Restore by replacing '--' with a placeholder, splitting on '-', then restoring dashes.
-    placeholder = "\x00"
-    restored = slug.replace("--", placeholder)
-    parts = restored.split("-")
-    parts = [p.replace(placeholder, "-") for p in parts]
-    # First part is empty if slug started with '-' (absolute path)
-    path = "/".join(parts)
+    if slug in _slug_cache:
+        return _slug_cache[slug]
+
+    home = os.path.expanduser("~")
+    result = _match_slug_recursive(slug, home)
+    if result:
+        _slug_cache[slug] = result
+        return result
+
+    # Fallback: naive replacement
+    path = slug.replace("-", "/")
     if slug.startswith("-"):
-        path = "/" + path[1:]  # remove leading empty segment, add /
+        path = "/" + path[1:]
+    _slug_cache[slug] = path
     return path or slug
 
 
