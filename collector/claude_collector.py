@@ -93,7 +93,7 @@ def decode_project_slug(slug: str, claude_home: str = None) -> str:
     """Convert Claude project slug back to filesystem path.
 
     Uses filesystem lookup to correctly handle path components containing dashes.
-    Returns full path (e.g. '/home/tsp-02/workspace/claude_dashboard').
+    Returns full path (e.g. '/home/tsp-02/workspace/pjt/claude_dashboard').
     """
     if not slug or slug == "-":
         return "(root)"
