@@ -98,22 +98,22 @@ def _sum_tokens(db: Session, condition: str) -> dict:
 
 @app.get("/usage/today")
 def get_today(db: Session = Depends(get_db)):
-    return _sum_tokens(db, "created_at::date = CURRENT_DATE")
+    return _sum_tokens(db, "(created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date")
 
 
 @app.get("/usage/yesterday")
 def get_yesterday(db: Session = Depends(get_db)):
-    return _sum_tokens(db, "created_at::date = CURRENT_DATE - 1")
+    return _sum_tokens(db, "(created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date - 1")
 
 
 @app.get("/usage/week")
 def get_week(db: Session = Depends(get_db)):
-    return _sum_tokens(db, "date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)")
+    return _sum_tokens(db, "date_trunc('week', created_at AT TIME ZONE 'Asia/Seoul') = date_trunc('week', NOW() AT TIME ZONE 'Asia/Seoul')")
 
 
 @app.get("/usage/month")
 def get_month(db: Session = Depends(get_db)):
-    return _sum_tokens(db, "date_trunc('month', created_at) = date_trunc('month', CURRENT_TIMESTAMP)")
+    return _sum_tokens(db, "date_trunc('month', created_at AT TIME ZONE 'Asia/Seoul') = date_trunc('month', NOW() AT TIME ZONE 'Asia/Seoul')")
 
 
 @app.get("/usage/sessions")
@@ -124,7 +124,7 @@ def get_sessions(
     r = db.execute(
         text("""
         SELECT user_name, machine, project, model, input_tokens, output_tokens, total_tokens, created_at
-        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        FROM claude_usage WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
         ORDER BY created_at DESC LIMIT :limit
         """),
         {"limit": limit},
@@ -155,7 +155,7 @@ def get_by_user(db: Session = Depends(get_db)):
                SUM(output_tokens) AS output_tokens,
                SUM(total_tokens) AS total_tokens,
                COUNT(*) AS turn_count
-        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        FROM claude_usage WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
         GROUP BY user_name ORDER BY total_tokens DESC
     """))
     return {"rows": [dict(x._mapping) for x in r]}
@@ -168,7 +168,7 @@ def get_by_project(db: Session = Depends(get_db)):
                SUM(total_tokens) AS total_tokens,
                COUNT(*) AS turn_count,
                COUNT(DISTINCT user_name) AS unique_users
-        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        FROM claude_usage WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
         GROUP BY project ORDER BY total_tokens DESC
     """))
     return {"rows": [dict(x._mapping) for x in r]}
@@ -180,7 +180,7 @@ def get_by_model(db: Session = Depends(get_db)):
         SELECT COALESCE(model, '(unknown)') AS model,
                SUM(total_tokens) AS total_tokens,
                COUNT(*) AS turn_count
-        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        FROM claude_usage WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
         GROUP BY model ORDER BY total_tokens DESC
     """))
     return {"rows": [dict(x._mapping) for x in r]}
@@ -189,11 +189,11 @@ def get_by_model(db: Session = Depends(get_db)):
 @app.get("/usage/hourly")
 def get_hourly(db: Session = Depends(get_db)):
     r = db.execute(text("""
-        SELECT EXTRACT(HOUR FROM created_at) AS hour,
+        SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE 'Asia/Seoul') AS hour,
                user_name,
                SUM(total_tokens) AS total_tokens,
                COUNT(*) AS turn_count
-        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        FROM claude_usage WHERE (created_at AT TIME ZONE 'Asia/Seoul')::date = (NOW() AT TIME ZONE 'Asia/Seoul')::date
         GROUP BY hour, user_name ORDER BY hour
     """))
     return {"rows": [dict(x._mapping) for x in r]}
@@ -202,12 +202,12 @@ def get_hourly(db: Session = Depends(get_db)):
 @app.get("/usage/daily")
 def get_daily(days: int = Query(30, le=90), db: Session = Depends(get_db)):
     r = db.execute(text("""
-        SELECT created_at::date AS day,
+        SELECT (created_at AT TIME ZONE 'Asia/Seoul')::date AS day,
                user_name,
                SUM(total_tokens) AS total_tokens,
                COUNT(*) AS turn_count
         FROM claude_usage
-        WHERE created_at >= CURRENT_DATE - :days
+        WHERE created_at >= (NOW() AT TIME ZONE 'Asia/Seoul')::date - :days
         GROUP BY day, user_name ORDER BY day
     """), {"days": days})
     return {"rows": [{**dict(x._mapping), "day": str(x._mapping["day"])} for x in r]}
