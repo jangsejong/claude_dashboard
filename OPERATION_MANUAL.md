@@ -15,7 +15,7 @@ TSP팀(5명) Claude Code Max 사용량 모니터링 시스템 운영 가이드
 ```
 
 - **서버**: tsp-03 (WSL2) — Docker로 API, DB, Grafana 운영
-- **서버 IP**: 100.78.212.91 (Tailscale), WSL 내부 172.27.202.25
+- **서버 IP**: 100.76.175.42 (Tailscale), WSL 내부 172.27.202.25
 - **수집기**: 각 개발자 PC에서 `~/.claude` 로그를 파싱하여 API로 전송
 
 ---
@@ -93,7 +93,7 @@ netsh interface portproxy delete v4tov4 listenport=3000 listenaddress=0.0.0.0
 
 ```bash
 mkdir -p ~/claude-collector
-scp tsp-03@100.78.212.91:~/workspace/pjt/claude_dashboard/collector/claude_collector.py ~/claude-collector/
+scp tsp-03@100.76.175.42:~/workspace/pjt/claude_dashboard/collector/claude_collector.py ~/claude-collector/
 ```
 
 또는 직접 파일을 복사해도 됩니다. 필요한 파일은 `claude_collector.py` 1개뿐입니다.
@@ -107,7 +107,7 @@ pip install requests
 ### 3-3. 연결 테스트
 
 ```bash
-curl http://100.78.212.91:8000/health
+curl http://100.76.175.42:8000/health
 ```
 
 `{"status":"ok"}` 이 나오면 정상입니다.
@@ -121,13 +121,13 @@ curl http://100.78.212.91:8000/health
 python3 ~/claude-collector/claude_collector.py \
   --user tsp-01 \
   --machine tsp-01 \
-  --api-url http://100.78.212.91:8000
+  --api-url http://100.76.175.42:8000
 
 # tsp-02의 경우
 python3 ~/claude-collector/claude_collector.py \
   --user tsp-02 \
   --machine tsp-02 \
-  --api-url http://100.78.212.91:8000
+  --api-url http://100.76.175.42:8000
 
 # tsp-03의 경우 (서버 자체)
 python3 ~/claude-collector/claude_collector.py \
@@ -139,13 +139,13 @@ python3 ~/claude-collector/claude_collector.py \
 python3 ~/claude-collector/claude_collector.py \
   --user tsp-04 \
   --machine tsp-04 \
-  --api-url http://100.78.212.91:8000
+  --api-url http://100.76.175.42:8000
 
 # tsp-05의 경우
 python3 ~/claude-collector/claude_collector.py \
   --user tsp-05 \
   --machine tsp-05 \
-  --api-url http://100.78.212.91:8000
+  --api-url http://100.76.175.42:8000
 ```
 
 `Sent N usage records.` 가 출력되면 성공입니다.
@@ -159,7 +159,7 @@ crontab -e
 아래 한 줄 추가 (user/machine은 각 PC에 맞게 변경):
 
 ```
-*/10 * * * * python3 ~/claude-collector/claude_collector.py --user tsp-01 --machine tsp-01 --api-url http://100.78.212.91:8000 >> /tmp/claude-collector.log 2>&1
+*/10 * * * * python3 ~/claude-collector/claude_collector.py --user tsp-01 --machine tsp-01 --api-url http://100.76.175.42:8000 >> /tmp/claude-collector.log 2>&1
 ```
 
 crontab 등록 확인:
@@ -176,7 +176,7 @@ crontab -l
 python3 ~/claude-collector/claude_collector.py \
   --user tsp-01 \
   --machine tsp-01 \
-  --api-url http://100.78.212.91:8000 \
+  --api-url http://100.76.175.42:8000 \
   --full-scan
 ```
 
@@ -189,7 +189,7 @@ python3 ~/claude-collector/claude_collector.py \
 브라우저로 접속:
 
 ```
-http://100.78.212.91:3000
+http://100.76.175.42:3000
 ```
 
 - ID: `admin`
@@ -198,7 +198,7 @@ http://100.78.212.91:3000
 ### 4-2. SSH 터널링 (외부 접속)
 
 ```bash
-ssh -L 3000:172.27.202.25:3000 user@100.78.212.91
+ssh -L 3000:172.27.202.25:3000 user@100.76.175.42
 ```
 
 이후 브라우저에서 `http://localhost:3000` 접속
@@ -226,21 +226,21 @@ ssh -L 3000:172.27.202.25:3000 user@100.78.212.91
 
 ```bash
 # 1. API 서버 접근 확인
-curl http://100.78.212.91:8000/health
+curl http://100.76.175.42:8000/health
 
 # 2. 실패 기록 확인
 cat ~/.claude-usage-collector-failures.jsonl
 
 # 3. 수집 상태 초기화 후 재전송
 rm ~/.claude-usage-collector-state.json
-python3 ~/claude-collector/claude_collector.py --user tsp-XX --machine tsp-XX --api-url http://100.78.212.91:8000
+python3 ~/claude-collector/claude_collector.py --user tsp-XX --machine tsp-XX --api-url http://100.76.175.42:8000
 ```
 
 ### Grafana에서 No Data 표시
 
 ```bash
 # 1. DB에 데이터 있는지 확인
-curl http://100.78.212.91:8000/usage/today
+curl http://100.76.175.42:8000/usage/today
 
 # 2. Grafana에서 Data Sources > PostgreSQL > Test 버튼 클릭
 
@@ -299,11 +299,11 @@ netsh interface portproxy add v4tov4 listenport=3000 listenaddress=0.0.0.0 conne
 
 | PC | --user | --machine | --api-url | cron |
 |----|--------|-----------|-----------|------|
-| tsp-01 | tsp-01 | tsp-01 | http://100.78.212.91:8000 | */10 * * * * |
-| tsp-02 | tsp-02 | tsp-02 | http://100.78.212.91:8000 | */10 * * * * |
+| tsp-01 | tsp-01 | tsp-01 | http://100.76.175.42:8000 | */10 * * * * |
+| tsp-02 | tsp-02 | tsp-02 | http://100.76.175.42:8000 | */10 * * * * |
 | tsp-03 | tsp-03 | tsp-03 | http://localhost:8000 | */10 * * * * |
-| tsp-04 | tsp-04 | tsp-04 | http://100.78.212.91:8000 | */10 * * * * |
-| tsp-05 | tsp-05 | tsp-05 | http://100.78.212.91:8000 | */10 * * * * |
+| tsp-04 | tsp-04 | tsp-04 | http://100.76.175.42:8000 | */10 * * * * |
+| tsp-05 | tsp-05 | tsp-05 | http://100.76.175.42:8000 | */10 * * * * |
 
 ---
 

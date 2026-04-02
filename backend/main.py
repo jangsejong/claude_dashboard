@@ -3,7 +3,10 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -11,6 +14,13 @@ from db import get_db, check_db
 from models import UsageRecord, UsagePostResponse
 
 app = FastAPI(title="Claude Usage API", description="Local log-based usage collection (no Anthropic API).")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 security = HTTPBearer(auto_error=False)
 API_KEY = os.getenv("API_KEY", "")
 
@@ -135,3 +145,79 @@ def get_sessions(
             for x in rows
         ]
     }
+
+
+@app.get("/usage/by-user")
+def get_by_user(db: Session = Depends(get_db)):
+    r = db.execute(text("""
+        SELECT user_name,
+               SUM(input_tokens) AS input_tokens,
+               SUM(output_tokens) AS output_tokens,
+               SUM(total_tokens) AS total_tokens,
+               COUNT(*) AS turn_count
+        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        GROUP BY user_name ORDER BY total_tokens DESC
+    """))
+    return {"rows": [dict(x._mapping) for x in r]}
+
+
+@app.get("/usage/by-project")
+def get_by_project(db: Session = Depends(get_db)):
+    r = db.execute(text("""
+        SELECT COALESCE(project, '(none)') AS project,
+               SUM(total_tokens) AS total_tokens,
+               COUNT(*) AS turn_count,
+               COUNT(DISTINCT user_name) AS unique_users
+        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        GROUP BY project ORDER BY total_tokens DESC
+    """))
+    return {"rows": [dict(x._mapping) for x in r]}
+
+
+@app.get("/usage/by-model")
+def get_by_model(db: Session = Depends(get_db)):
+    r = db.execute(text("""
+        SELECT COALESCE(model, '(unknown)') AS model,
+               SUM(total_tokens) AS total_tokens,
+               COUNT(*) AS turn_count
+        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        GROUP BY model ORDER BY total_tokens DESC
+    """))
+    return {"rows": [dict(x._mapping) for x in r]}
+
+
+@app.get("/usage/hourly")
+def get_hourly(db: Session = Depends(get_db)):
+    r = db.execute(text("""
+        SELECT EXTRACT(HOUR FROM created_at) AS hour,
+               user_name,
+               SUM(total_tokens) AS total_tokens,
+               COUNT(*) AS turn_count
+        FROM claude_usage WHERE created_at::date = CURRENT_DATE
+        GROUP BY hour, user_name ORDER BY hour
+    """))
+    return {"rows": [dict(x._mapping) for x in r]}
+
+
+@app.get("/usage/daily")
+def get_daily(days: int = Query(30, le=90), db: Session = Depends(get_db)):
+    r = db.execute(text("""
+        SELECT created_at::date AS day,
+               user_name,
+               SUM(total_tokens) AS total_tokens,
+               COUNT(*) AS turn_count
+        FROM claude_usage
+        WHERE created_at >= CURRENT_DATE - :days
+        GROUP BY day, user_name ORDER BY day
+    """), {"days": days})
+    return {"rows": [{**dict(x._mapping), "day": str(x._mapping["day"])} for x in r]}
+
+
+# Serve frontend
+FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(FRONTEND_DIR):
+    @app.get("/dashboard")
+    def serve_dashboard():
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+
+    app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")

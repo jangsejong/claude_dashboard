@@ -1,7 +1,7 @@
 {
-  "title": "TSP Team - Claude Usage Dashboard",
+  "title": "TSP 팀 - Claude 사용량 대시보드",
   "uid": "claude-usage",
-  "description": "TSP Team (tsp-01 ~ tsp-05) Claude Code Max usage pattern monitoring",
+  "description": "TSP 팀 (tsp-01 ~ tsp-05) Claude Code Max 사용 패턴 모니터링",
   "tags": ["claude", "tsp"],
   "timezone": "browser",
   "refresh": "1m",
@@ -13,22 +13,22 @@
     {
       "id": 100,
       "type": "row",
-      "title": "TODAY OVERVIEW",
+      "title": "오늘 현황",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "collapsed": false
     },
     {
       "id": 1,
-      "title": "Today Prompts",
-      "description": "Total prompt count today (team)",
+      "title": "오늘 프롬프트",
+      "description": "오늘 팀 전체 프롬프트 수",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 0, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"프롬프트\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 1000}, {"color": "#F2495C", "value": 1500}] },
+          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 1000}, {"color": "#FF8A8A", "value": 1500}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -37,16 +37,16 @@
     },
     {
       "id": 2,
-      "title": "Today Est. Tokens",
-      "description": "Actual collected token total today",
+      "title": "오늘 토큰",
+      "description": "오늘 수집된 실제 토큰 합계",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 4, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"tokens\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"토큰\" FROM claude_usage WHERE created_at::date = CURRENT_DATE", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 3000000}, {"color": "#F2495C", "value": 4500000}] },
+          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 3000000}, {"color": "#FF8A8A", "value": 4500000}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -55,16 +55,16 @@
     },
     {
       "id": 3,
-      "title": "Today Active Hours",
-      "description": "Team total active hours (first~last message span per user)",
+      "title": "오늘 활성 시간",
+      "description": "팀 전체 활성 시간 (사용자별 첫~마지막 메시지 간격 합산)",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 8, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"hours\" FROM (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"시간\" FROM (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#37872D", "value": null}, {"color": "#FF9830", "value": 30}, {"color": "#F2495C", "value": 40}] },
+          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 30}, {"color": "#FF8A8A", "value": 40}] },
           "unit": "h",
           "noValue": "0"
         }
@@ -73,15 +73,15 @@
     },
     {
       "id": 4,
-      "title": "This Week Prompts",
+      "title": "이번 주 프롬프트",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 12, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"prompts\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COUNT(*) AS \"프롬프트\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -90,15 +90,15 @@
     },
     {
       "id": 5,
-      "title": "This Week Tokens",
+      "title": "이번 주 토큰",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 16, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"tokens\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(SUM(total_tokens),0) AS \"토큰\" FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP)", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -107,15 +107,15 @@
     },
     {
       "id": 6,
-      "title": "This Week Hours",
+      "title": "이번 주 시간",
       "type": "stat",
       "gridPos": { "h": 5, "w": 4, "x": 20, "y": 1 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"hours\" FROM (SELECT user_name, created_at::date AS day, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name, created_at::date) t", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(ROUND(SUM(hours)::numeric, 1), 0) AS \"시간\" FROM (SELECT user_name, created_at::date AS day, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name, created_at::date) t", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#1F60C4", "value": null}] },
+          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
           "unit": "h",
           "noValue": "0"
         }
@@ -126,90 +126,90 @@
     {
       "id": 101,
       "type": "row",
-      "title": "PER USER - tsp-01 ~ tsp-05",
+      "title": "사용자별 현황 - tsp-01 ~ tsp-05",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
       "collapsed": false
     },
     {
       "id": 10,
-      "title": "User Prompts Today",
-      "description": "Per-user prompt count today",
+      "title": "사용자별 프롬프트 (오늘)",
+      "description": "사용자별 오늘 프롬프트 수",
       "type": "bargauge",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 7 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(c.cnt, 0) AS \"Prompts\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"사용자\", COALESCE(c.cnt, 0) AS \"프롬프트\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 300}, {"color": "#F2495C", "value": 400}] },
+          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 300}, {"color": "#FF8A8A", "value": 400}] },
           "min": 0,
           "unit": "short",
           "noValue": "0"
         }
       },
-      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Prompts$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
-      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "Prompts", "handlerKey": "field.value" }] } }]
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^프롬프트$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "사용자", "handlerKey": "field.name" }, { "fieldName": "프롬프트", "handlerKey": "field.value" }] } }]
     },
     {
       "id": 11,
-      "title": "User Active Hours Today",
-      "description": "Per-user active hours (first~last message span)",
+      "title": "사용자별 활성 시간 (오늘)",
+      "description": "사용자별 활성 시간 (첫~마지막 메시지 간격)",
       "type": "bargauge",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 7 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(ROUND(c.hours::numeric, 1), 0) AS \"Hours\" FROM users u LEFT JOIN (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"사용자\", COALESCE(ROUND(c.hours::numeric, 1), 0) AS \"시간\" FROM users u LEFT JOIN (SELECT user_name, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 8}, {"color": "#F2495C", "value": 10}] },
+          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 8}, {"color": "#FF8A8A", "value": 10}] },
           "min": 0,
           "unit": "h",
           "noValue": "0"
         }
       },
-      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Hours$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
-      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "Hours", "handlerKey": "field.value" }] } }]
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^시간$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "사용자", "handlerKey": "field.name" }, { "fieldName": "시간", "handlerKey": "field.value" }] } }]
     },
     {
       "id": 12,
-      "title": "Prompt/Hour (Automation Alert)",
-      "description": "> 40/hr may indicate automated scripts",
+      "title": "프롬프트/시간 (자동화 경고)",
+      "description": "시간당 40회 이상은 자동화 스크립트 의심",
       "type": "bargauge",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 7 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(ROUND(c.cnt::numeric / GREATEST(c.hours, 0.1), 1), 0) AS \"P/Hr\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"사용자\", COALESCE(ROUND(c.cnt::numeric / GREATEST(c.hours, 0.1), 1), 0) AS \"횟수/시간\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS cnt, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) c ON u.user_name = c.user_name ORDER BY u.user_name", "format": "table" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#73BF69", "value": null}, {"color": "#FF9830", "value": 40}, {"color": "#F2495C", "value": 50}] },
+          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 40}, {"color": "#FF8A8A", "value": 50}] },
           "min": 0,
           "unit": "short",
           "noValue": "0"
         }
       },
-      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^P\\/Hr$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
-      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "User", "handlerKey": "field.name" }, { "fieldName": "P/Hr", "handlerKey": "field.value" }] } }]
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "showUnfilled": true, "minVizWidth": 0, "minVizHeight": 10, "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^횟수\\/시간$/" }, "text": { "titleSize": 14, "valueSize": 20 } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "사용자", "handlerKey": "field.name" }, { "fieldName": "횟수/시간", "handlerKey": "field.value" }] } }]
     },
 
     {
       "id": 102,
       "type": "row",
-      "title": "USAGE PATTERN",
+      "title": "사용 패턴",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
       "collapsed": false
     },
     {
       "id": 20,
-      "title": "Hourly Prompt Activity (Today by User)",
-      "description": "Stacked bar: who is using Claude each hour",
+      "title": "시간대별 프롬프트 활동 (오늘, 사용자별)",
+      "description": "시간대별 사용자 Claude 사용 현황 (누적 막대)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT date_trunc('hour', created_at) AS \"time\", user_name AS metric, COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY 1, user_name ORDER BY 1", "format": "time_series" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT date_trunc('hour', created_at) AS \"time\", user_name AS metric, COUNT(*) AS \"프롬프트\" FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY 1, user_name ORDER BY 1", "format": "time_series" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": { "lineWidth": 0, "fillOpacity": 80, "pointSize": 5, "showPoints": "always", "stacking": { "mode": "normal" }, "drawStyle": "bars", "barAlignment": 0 },
+          "custom": { "lineWidth": 0, "fillOpacity": 50, "pointSize": 5, "showPoints": "always", "stacking": { "mode": "normal" }, "drawStyle": "bars", "barAlignment": 0 },
           "unit": "short"
         }
       },
@@ -218,12 +218,12 @@
 
     {
       "id": 21,
-      "title": "Daily Prompt Trend (30 days)",
-      "description": "Daily prompt count per user over the last 30 days",
+      "title": "일별 프롬프트 추이 (30일)",
+      "description": "최근 30일 사용자별 일간 프롬프트 수",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 14, "x": 0, "y": 24 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT created_at::date AS \"time\", user_name AS metric, COUNT(*) AS \"prompts\" FROM claude_usage WHERE created_at >= NOW() - INTERVAL '30 days' GROUP BY created_at::date, user_name ORDER BY 1", "format": "time_series" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT created_at::date AS \"time\", user_name AS metric, COUNT(*) AS \"프롬프트\" FROM claude_usage WHERE created_at >= NOW() - INTERVAL '30 days' GROUP BY created_at::date, user_name ORDER BY 1", "format": "time_series" }],
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -235,18 +235,18 @@
     },
     {
       "id": 22,
-      "title": "User Summary Table",
-      "description": "Comprehensive per-user stats",
+      "title": "사용자 요약",
+      "description": "사용자별 종합 통계",
       "type": "table",
       "gridPos": { "h": 8, "w": 10, "x": 14, "y": 24 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"User\", COALESCE(t.today_prompts, 0) AS \"Today\", COALESCE(t.today_tokens, 0) AS \"Tokens\", COALESCE(ROUND(t.today_hours::numeric, 1), 0) AS \"Hours\", COALESCE(ROUND(t.today_prompts::numeric / GREATEST(t.today_hours, 0.1), 0), 0) AS \"P/Hr\", COALESCE(w.week_prompts, 0) AS \"Week\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS today_prompts, SUM(total_tokens) AS today_tokens, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS today_hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t ON u.user_name = t.user_name LEFT JOIN (SELECT user_name, COUNT(*) AS week_prompts FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name) w ON u.user_name = w.user_name ORDER BY u.user_name", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "WITH users AS (SELECT unnest(ARRAY['tsp-01','tsp-02','tsp-03','tsp-04','tsp-05']) AS user_name) SELECT u.user_name AS \"사용자\", COALESCE(t.today_prompts, 0) AS \"오늘\", COALESCE(t.today_tokens, 0) AS \"토큰\", COALESCE(ROUND(t.today_hours::numeric, 1), 0) AS \"시간\", COALESCE(ROUND(t.today_prompts::numeric / GREATEST(t.today_hours, 0.1), 0), 0) AS \"횟수/시간\", COALESCE(w.week_prompts, 0) AS \"이번주\" FROM users u LEFT JOIN (SELECT user_name, COUNT(*) AS today_prompts, SUM(total_tokens) AS today_tokens, EXTRACT(EPOCH FROM (MAX(created_at) - MIN(created_at))) / 3600.0 AS today_hours FROM claude_usage WHERE created_at::date = CURRENT_DATE GROUP BY user_name) t ON u.user_name = t.user_name LEFT JOIN (SELECT user_name, COUNT(*) AS week_prompts FROM claude_usage WHERE date_trunc('week', created_at) = date_trunc('week', CURRENT_TIMESTAMP) GROUP BY user_name) w ON u.user_name = w.user_name ORDER BY u.user_name", "format": "table" }],
       "fieldConfig": {
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Today" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 200}, {"color": "red", "value": 400}] } }] },
-          { "matcher": { "id": "byName", "options": "P/Hr" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 30}, {"color": "red", "value": 50}] } }] },
-          { "matcher": { "id": "byName", "options": "Tokens" }, "properties": [{ "id": "unit", "value": "short" }] },
-          { "matcher": { "id": "byName", "options": "Hours" }, "properties": [{ "id": "unit", "value": "h" }] }
+          { "matcher": { "id": "byName", "options": "오늘" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 200}, {"color": "red", "value": 400}] } }] },
+          { "matcher": { "id": "byName", "options": "횟수/시간" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-GrYlRd" } }, { "id": "thresholds", "value": { "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 30}, {"color": "red", "value": 50}] } }] },
+          { "matcher": { "id": "byName", "options": "토큰" }, "properties": [{ "id": "unit", "value": "short" }] },
+          { "matcher": { "id": "byName", "options": "시간" }, "properties": [{ "id": "unit", "value": "h" }] }
         ]
       },
       "options": { "showHeader": true, "cellHeight": "md", "footer": { "enablePagination": false, "show": true, "reducer": ["sum"] } }
@@ -255,58 +255,58 @@
     {
       "id": 103,
       "type": "row",
-      "title": "PROJECT & MODEL",
+      "title": "프로젝트 & 모델",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 32 },
       "collapsed": false
     },
     {
       "id": 30,
-      "title": "Project Usage",
+      "title": "프로젝트별 사용량",
       "type": "table",
       "gridPos": { "h": 7, "w": 14, "x": 0, "y": 33 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(project,'(none)') AS \"Project\", COUNT(*) AS \"Prompts\", SUM(total_tokens) AS \"Tokens\", COUNT(DISTINCT user_name) AS \"Users\" FROM claude_usage GROUP BY project ORDER BY \"Prompts\" DESC LIMIT 20", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(project,'(없음)') AS \"프로젝트\", COUNT(*) AS \"프롬프트\", SUM(total_tokens) AS \"토큰\", COUNT(DISTINCT user_name) AS \"사용자\" FROM claude_usage GROUP BY project ORDER BY \"프롬프트\" DESC LIMIT 20", "format": "table" }],
       "fieldConfig": {
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Prompts" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] }
+          { "matcher": { "id": "byName", "options": "프롬프트" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] }
         ]
       },
       "options": { "showHeader": true, "cellHeight": "sm", "footer": { "enablePagination": false, "show": true, "reducer": ["sum"] } }
     },
     {
       "id": 31,
-      "title": "Model Distribution",
+      "title": "모델 분포",
       "type": "piechart",
       "gridPos": { "h": 7, "w": 10, "x": 14, "y": 33 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(model,'unknown') AS \"Model\", COUNT(*) AS \"Prompts\" FROM claude_usage GROUP BY model ORDER BY \"Prompts\" DESC", "format": "table" }],
-      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "tooltip": { "mode": "single" }, "pieType": "donut", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^Prompts$/" } },
-      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "Model", "handlerKey": "field.name" }, { "fieldName": "Prompts", "handlerKey": "field.value" }] } }]
+      "targets": [{ "refId": "A", "rawSql": "SELECT COALESCE(model,'unknown') AS \"모델\", COUNT(*) AS \"프롬프트\" FROM claude_usage GROUP BY model ORDER BY \"프롬프트\" DESC", "format": "table" }],
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "tooltip": { "mode": "single" }, "pieType": "donut", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^프롬프트$/" } },
+      "transformations": [{ "id": "rowsToFields", "options": { "mappings": [{ "fieldName": "모델", "handlerKey": "field.name" }, { "fieldName": "프롬프트", "handlerKey": "field.value" }] } }]
     },
 
     {
       "id": 104,
       "type": "row",
-      "title": "RECENT ACTIVITY",
+      "title": "최근 활동",
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
       "collapsed": false
     },
     {
       "id": 40,
-      "title": "Recent Prompts (Today)",
+      "title": "최근 프롬프트 (오늘)",
       "type": "table",
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
       "datasource": { "type": "postgres", "uid": "postgres" },
-      "targets": [{ "refId": "A", "rawSql": "SELECT user_name AS \"User\", project AS \"Project\", model AS \"Model\", input_tokens AS \"In\", output_tokens AS \"Out\", total_tokens AS \"Total\", created_at AS \"Time\" FROM claude_usage WHERE created_at::date = CURRENT_DATE ORDER BY created_at DESC LIMIT 200", "format": "table" }],
+      "targets": [{ "refId": "A", "rawSql": "SELECT user_name AS \"사용자\", project AS \"프로젝트\", model AS \"모델\", input_tokens AS \"입력\", output_tokens AS \"출력\", total_tokens AS \"합계\", created_at AS \"시각\" FROM claude_usage WHERE created_at::date = CURRENT_DATE ORDER BY created_at DESC LIMIT 200", "format": "table" }],
       "fieldConfig": {
         "overrides": [
-          { "matcher": { "id": "byName", "options": "Total" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] },
-          { "matcher": { "id": "byName", "options": "Time" }, "properties": [{ "id": "unit", "value": "dateTimeAsIso" }] }
+          { "matcher": { "id": "byName", "options": "합계" }, "properties": [{ "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "color-background" } }, { "id": "color", "value": { "mode": "continuous-BlYlRd" } }] },
+          { "matcher": { "id": "byName", "options": "시각" }, "properties": [{ "id": "unit", "value": "dateTimeAsIso" }] }
         ]
       },
       "options": { "showHeader": true, "cellHeight": "sm", "footer": { "enablePagination": true, "show": true, "reducer": ["sum"], "countRows": true } }
     }
   ],
   "schemaVersion": 38,
-  "version": 3
+  "version": 5
 }
