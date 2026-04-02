@@ -41,6 +41,28 @@
 
 <div class="container-fluid px-4 py-4">
 
+  <!-- Filters -->
+  <div class="row g-3 mb-3">
+    <div class="col-auto">
+      <div class="card p-2 d-flex flex-row align-items-center gap-2 flex-wrap">
+        <i class="bi bi-calendar3 ms-2"></i>
+        <input type="date" class="form-control form-control-sm" id="dateFrom" style="width:150px;">
+        <span class="text-muted">~</span>
+        <input type="date" class="form-control form-control-sm" id="dateTo" style="width:150px;">
+        <i class="bi bi-person ms-2"></i>
+        <select class="form-select form-select-sm" id="userFilter" style="width:140px;">
+          <option value="">전체 사용자</option>
+        </select>
+        <button class="btn btn-sm btn-primary" onclick="applyFilters()">조회</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">오늘</button>
+      </div>
+    </div>
+    <div class="col-auto d-flex align-items-center gap-2">
+      <span class="badge bg-secondary" id="dateLabel">오늘</span>
+      <span class="badge bg-secondary" id="userLabel2" style="display:none;"></span>
+    </div>
+  </div>
+
   <!-- KPI Cards -->
   <div class="row g-3 mb-4" id="kpiRow">
     <div class="col-6 col-md-3">
@@ -73,7 +95,7 @@
   <div class="row g-3 mb-4">
     <div class="col-lg-8">
       <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-bar-chart me-1"></i>시간대별 사용량 (오늘)</h6>
+        <h6 class="mb-3"><i class="bi bi-bar-chart me-1"></i>시간대별 사용량 (<span id="hourlyLabel">오늘</span>)</h6>
         <div class="chart-container">
           <canvas id="hourlyChart"></canvas>
         </div>
@@ -105,7 +127,7 @@
   <div class="row g-3 mb-4">
     <div class="col-lg-6">
       <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-people me-1"></i>사용자별 현황 (오늘)</h6>
+        <h6 class="mb-3"><i class="bi bi-people me-1"></i>사용자별 현황 (<span id="userLabel">오늘</span>)</h6>
         <div class="table-responsive">
           <table class="table table-hover mb-0">
             <thead><tr><th>사용자</th><th class="text-end">입력</th><th class="text-end">출력</th><th class="text-end">합계</th><th class="text-end">횟수</th></tr></thead>
@@ -116,7 +138,7 @@
     </div>
     <div class="col-lg-6">
       <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-folder me-1"></i>프로젝트별 현황 (오늘)</h6>
+        <h6 class="mb-3"><i class="bi bi-folder me-1"></i>프로젝트별 현황 (<span id="projectLabel">오늘</span>)</h6>
         <div class="table-responsive">
           <table class="table table-hover mb-0">
             <thead><tr><th>프로젝트</th><th class="text-end">토큰</th><th class="text-end">횟수</th><th class="text-end">사용자</th></tr></thead>
@@ -150,7 +172,113 @@
 <script>
 const API = window.location.origin;
 const USER_COLORS = ['#667eea','#f093fb','#4facfe','#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb'];
+const MODEL_COLORS = ['#ff6b6b','#ffa502','#2ed573','#1e90ff','#a55eea','#ff7eb3','#00d2d3','#f9ca24'];
 let hourlyChart, modelChart, dailyChart;
+const userColorMap = {}; // user_name -> fixed color
+
+function getUserColor(userName) {
+  if (!userColorMap[userName]) {
+    const idx = Object.keys(userColorMap).length;
+    userColorMap[userName] = USER_COLORS[idx % USER_COLORS.length];
+  }
+  return userColorMap[userName];
+}
+
+let selectedDateFrom = null;
+let selectedDateTo = null;
+let selectedUser = null;
+
+function getToday() {
+  return new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD format
+}
+
+function isRangeFilter() {
+  return selectedDateFrom && selectedDateTo && selectedDateFrom !== selectedDateTo;
+}
+
+function isSingleDate() {
+  return selectedDateFrom && selectedDateTo && selectedDateFrom === selectedDateTo;
+}
+
+function appendFilters(path) {
+  const params = [];
+  if (isRangeFilter()) {
+    params.push(`date_from=${selectedDateFrom}`);
+    params.push(`date_to=${selectedDateTo}`);
+  } else if (isSingleDate()) {
+    params.push(`date=${selectedDateFrom}`);
+  }
+  if (selectedUser) params.push(`user=${encodeURIComponent(selectedUser)}`);
+  if (!params.length) return path;
+  return path + (path.includes('?') ? '&' : '?') + params.join('&');
+}
+
+function getDateLabel() {
+  if (!selectedDateFrom && !selectedDateTo) return '오늘';
+  if (selectedDateFrom === getToday() && selectedDateTo === getToday()) return '오늘';
+  if (isSingleDate()) return selectedDateFrom;
+  if (isRangeFilter()) return `${selectedDateFrom} ~ ${selectedDateTo}`;
+  return '오늘';
+}
+
+function applyFilters() {
+  const fromInput = document.getElementById('dateFrom');
+  const toInput = document.getElementById('dateTo');
+  const userInput = document.getElementById('userFilter');
+
+  selectedDateFrom = fromInput.value || getToday();
+  selectedDateTo = toInput.value || getToday();
+  selectedUser = userInput.value || null;
+
+  // Ensure from <= to
+  if (selectedDateFrom > selectedDateTo) {
+    [selectedDateFrom, selectedDateTo] = [selectedDateTo, selectedDateFrom];
+    fromInput.value = selectedDateFrom;
+    toInput.value = selectedDateTo;
+  }
+
+  const label = getDateLabel();
+  const isToday = label === '오늘';
+  document.getElementById('dateLabel').textContent = label;
+  document.getElementById('dateLabel').className = isToday ? 'badge bg-secondary' : 'badge bg-primary';
+
+  const userBadge = document.getElementById('userLabel2');
+  if (selectedUser) {
+    userBadge.textContent = selectedUser;
+    userBadge.style.display = '';
+    userBadge.className = 'badge bg-info';
+  } else {
+    userBadge.style.display = 'none';
+  }
+  refreshAll();
+}
+
+function resetFilters() {
+  selectedDateFrom = null;
+  selectedDateTo = null;
+  selectedUser = null;
+  const today = getToday();
+  document.getElementById('dateFrom').value = today;
+  document.getElementById('dateTo').value = today;
+  document.getElementById('userFilter').value = '';
+  document.getElementById('dateLabel').textContent = '오늘';
+  document.getElementById('dateLabel').className = 'badge bg-secondary';
+  document.getElementById('userLabel2').style.display = 'none';
+  refreshAll();
+}
+
+async function loadUserList() {
+  const data = await api('/usage/users');
+  // Build stable color map from sorted user list
+  data.users.forEach((u, i) => {
+    if (!userColorMap[u]) userColorMap[u] = USER_COLORS[i % USER_COLORS.length];
+  });
+  const sel = document.getElementById('userFilter');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">전체 사용자</option>' +
+    data.users.map(u => `<option value="${u}">${u}</option>`).join('');
+  sel.value = current;
+}
 
 function fmt(n) {
   if (n == null) return '-';
@@ -164,33 +292,56 @@ async function api(path) {
   return r.json();
 }
 
+// Initialize date pickers
+document.addEventListener('DOMContentLoaded', () => {
+  const today = getToday();
+  document.getElementById('dateFrom').value = today;
+  document.getElementById('dateTo').value = today;
+});
+
 async function loadKPI() {
-  const [today, week, month, byUser] = await Promise.all([
-    api('/usage/today'), api('/usage/week'), api('/usage/month'), api('/usage/by-user')
-  ]);
-  document.getElementById('todayTokens').textContent = fmt(today.total_tokens);
-  document.getElementById('weekTokens').textContent = fmt(week.total_tokens);
-  document.getElementById('monthTokens').textContent = fmt(month.total_tokens);
-  const totalTurns = byUser.rows.reduce((s, r) => s + r.turn_count, 0);
-  document.getElementById('todayTurns').textContent = fmt(totalTurns);
+  const userParam = selectedUser ? `user=${encodeURIComponent(selectedUser)}` : '';
+  const addUser = (path) => userParam ? path + (path.includes('?') ? '&' : '?') + userParam : path;
+  const hasDateFilter = isRangeFilter() || isSingleDate();
+  if (hasDateFilter) {
+    const byUser = await api(appendFilters('/usage/by-user'));
+    const totalTokens = byUser.rows.reduce((s, r) => s + r.total_tokens, 0);
+    const totalTurns = byUser.rows.reduce((s, r) => s + r.turn_count, 0);
+    document.getElementById('todayTurns').textContent = fmt(totalTurns);
+    document.getElementById('todayTokens').textContent = fmt(totalTokens);
+    document.getElementById('weekTokens').textContent = '-';
+    document.getElementById('monthTokens').textContent = '-';
+  } else {
+    const [today, week, month, byUser] = await Promise.all([
+      api(addUser('/usage/today')), api(addUser('/usage/week')), api(addUser('/usage/month')), api(appendFilters('/usage/by-user'))
+    ]);
+    document.getElementById('todayTokens').textContent = fmt(today.total_tokens);
+    document.getElementById('weekTokens').textContent = fmt(week.total_tokens);
+    document.getElementById('monthTokens').textContent = fmt(month.total_tokens);
+    const totalTurns = byUser.rows.reduce((s, r) => s + r.turn_count, 0);
+    document.getElementById('todayTurns').textContent = fmt(totalTurns);
+  }
 }
 
 async function loadUserTable() {
-  const data = await api('/usage/by-user');
+  const data = await api(appendFilters('/usage/by-user'));
   const tb = document.getElementById('userTable');
   if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-muted">데이터 없음</td></tr>'; return; }
-  tb.innerHTML = data.rows.map((r, i) => `
+  tb.innerHTML = data.rows.map(r => {
+    const c = getUserColor(r.user_name);
+    return `
     <tr>
-      <td><span class="user-badge" style="background:${USER_COLORS[i % USER_COLORS.length]}20;color:${USER_COLORS[i % USER_COLORS.length]}">${r.user_name}</span></td>
+      <td><span class="user-badge" style="background:${c}20;color:${c}">${r.user_name}</span></td>
       <td class="text-end">${fmt(r.input_tokens)}</td>
       <td class="text-end">${fmt(r.output_tokens)}</td>
       <td class="text-end fw-bold">${fmt(r.total_tokens)}</td>
       <td class="text-end">${r.turn_count}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function loadProjectTable() {
-  const data = await api('/usage/by-project');
+  const data = await api(appendFilters('/usage/by-project'));
   const tb = document.getElementById('projectTable');
   if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="4" class="text-center text-muted">데이터 없음</td></tr>'; return; }
   tb.innerHTML = data.rows.map(r => `
@@ -203,11 +354,12 @@ async function loadProjectTable() {
 }
 
 async function loadSessions() {
-  const data = await api('/usage/sessions?limit=200');
+  const data = await api(appendFilters('/usage/sessions?limit=200'));
   const tb = document.getElementById('sessionTable');
   if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="7" class="text-center text-muted">데이터 없음</td></tr>'; return; }
   tb.innerHTML = data.rows.map(r => {
-    const t = r.created_at ? new Date(r.created_at).toLocaleTimeString('ko-KR') : '-';
+    const dt = r.created_at ? new Date(r.created_at) : null;
+    const t = dt ? (isRangeFilter() ? dt.toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) : dt.toLocaleTimeString('ko-KR')) : '-';
     return `<tr>
       <td>${t}</td><td>${r.user_name}</td><td><code>${r.project || '-'}</code></td><td><small>${r.model || '-'}</small></td>
       <td class="text-end">${fmt(r.input_tokens)}</td><td class="text-end">${fmt(r.output_tokens)}</td>
@@ -217,17 +369,17 @@ async function loadSessions() {
 }
 
 async function loadHourlyChart() {
-  const data = await api('/usage/hourly');
-  const users = [...new Set(data.rows.map(r => r.user_name))];
+  const data = await api(appendFilters('/usage/hourly'));
+  const users = [...new Set(data.rows.map(r => r.user_name))].sort();
   const hours = Array.from({length: 24}, (_, i) => i);
 
-  const datasets = users.map((u, i) => ({
+  const datasets = users.map(u => ({
     label: u,
     data: hours.map(h => {
       const found = data.rows.find(r => r.user_name === u && Number(r.hour) === h);
       return found ? found.total_tokens : 0;
     }),
-    backgroundColor: USER_COLORS[i % USER_COLORS.length] + 'CC',
+    backgroundColor: getUserColor(u) + 'CC',
     borderRadius: 4,
   }));
 
@@ -244,13 +396,13 @@ async function loadHourlyChart() {
 }
 
 async function loadModelChart() {
-  const data = await api('/usage/by-model');
+  const data = await api(appendFilters('/usage/by-model'));
   if (modelChart) modelChart.destroy();
   modelChart = new Chart(document.getElementById('modelChart'), {
     type: 'doughnut',
     data: {
       labels: data.rows.map(r => r.model),
-      datasets: [{ data: data.rows.map(r => r.total_tokens), backgroundColor: USER_COLORS }]
+      datasets: [{ data: data.rows.map(r => r.total_tokens), backgroundColor: MODEL_COLORS }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -261,17 +413,17 @@ async function loadModelChart() {
 
 async function loadDailyChart() {
   const data = await api('/usage/daily?days=30');
-  const users = [...new Set(data.rows.map(r => r.user_name))];
+  const users = [...new Set(data.rows.map(r => r.user_name))].sort();
   const days = [...new Set(data.rows.map(r => r.day))].sort();
 
-  const datasets = users.map((u, i) => ({
+  const datasets = users.map(u => ({
     label: u,
     data: days.map(d => {
       const found = data.rows.find(r => r.user_name === u && r.day === d);
       return found ? found.total_tokens : 0;
     }),
-    borderColor: USER_COLORS[i % USER_COLORS.length],
-    backgroundColor: USER_COLORS[i % USER_COLORS.length] + '20',
+    borderColor: getUserColor(u),
+    backgroundColor: getUserColor(u) + '20',
     fill: true, tension: 0.3, pointRadius: 2,
   }));
 
@@ -291,9 +443,14 @@ async function loadDailyChart() {
 async function refreshAll() {
   const icon = document.getElementById('refreshIcon');
   icon.classList.add('refresh-spin');
+  const label = getDateLabel();
+  ['hourlyLabel','userLabel','projectLabel'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
   try {
     await Promise.all([
-      loadKPI(), loadUserTable(), loadProjectTable(),
+      loadUserList(), loadKPI(), loadUserTable(), loadProjectTable(),
       loadSessions(), loadHourlyChart(), loadModelChart(), loadDailyChart()
     ]);
     document.getElementById('lastUpdate').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
