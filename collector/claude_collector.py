@@ -90,16 +90,14 @@ _slug_cache: dict = {}
 
 
 def _extract_workspace_project(full_path: str) -> str:
-    """Extract the workspace-relative project path.
-    e.g. '/home/tsp-02/workspace/claude_dashboard' -> 'claude_dashboard'
-         '/home/tsp-02/workspace' -> '(workspace root)'
+    """Extract path from workspace onward.
+    e.g. '/home/tsp-02/workspace/claude_dashboard' -> 'workspace/claude_dashboard'
+         '/home/tsp-02/workspace' -> 'workspace'
     """
     import re
-    m = re.search(r'/workspace/(.+)$', full_path)
+    m = re.search(r'/(workspace(?:/.*)?)$', full_path)
     if m:
         return m.group(1)
-    if full_path.endswith('/workspace'):
-        return "(workspace root)"
     return full_path
 
 
