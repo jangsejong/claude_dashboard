@@ -8,24 +8,31 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
-    :root { --api-url: ''; }
-    body { background: #f0f2f5; }
-    .stat-card { border: none; border-radius: 12px; transition: transform .15s; }
-    .stat-card:hover { transform: translateY(-2px); }
+    :root { --pastel-bg: #f5f3ff; --label-color: #8b8fa3; --nav-from: #b8c0ff; --nav-to: #d4bbfc; }
+    body { background: var(--pastel-bg); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .stat-card { border: none; border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
     .stat-value { font-size: 2rem; font-weight: 700; }
-    .stat-label { font-size: .85rem; color: #6c757d; }
-    .card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-    .table th { font-weight: 600; font-size: .85rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
-    .user-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
+    .stat-label { font-size: .85rem; color: var(--label-color); font-weight: 500; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+    .table th { font-weight: 600; font-size: .8rem; color: var(--label-color); text-transform: uppercase; letter-spacing: .5px; }
+    .user-badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
     .chart-container { position: relative; height: 300px; }
     .refresh-spin { animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+    .navbar { background: linear-gradient(135deg, var(--nav-from) 0%, var(--nav-to) 100%) !important; }
+    .navbar-brand, .navbar .btn { color: #4a4a6a !important; }
+    .navbar .text-white-50 { color: #6b6b8a !important; }
+    .navbar .btn-outline-light { border-color: #9b9bbb; color: #4a4a6a !important; }
+    .navbar .btn-outline-light:hover { background: rgba(255,255,255,.3); }
+    .table-hover tbody tr:hover { background: #f8f5ff; }
+    code { background: #f0edff; color: #6b5eaa; padding: 2px 6px; border-radius: 4px; font-size: .82rem; }
+    .footer-text { font-size: .75rem; color: var(--label-color); text-align: center; padding: 1rem 0 2rem; }
   </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark px-3 py-2">
+<nav class="navbar px-3 py-2">
   <div class="container-fluid">
     <span class="navbar-brand mb-0 h5">
       <i class="bi bi-speedometer2 me-2"></i>TSP 팀 - Claude 사용량 대시보드
@@ -171,8 +178,8 @@
 
 <script>
 const API = window.location.origin;
-const USER_COLORS = ['#667eea','#f093fb','#4facfe','#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb'];
-const MODEL_COLORS = ['#ff6b6b','#ffa502','#2ed573','#1e90ff','#a55eea','#ff7eb3','#00d2d3','#f9ca24'];
+const USER_COLORS = ['#93b5f5','#f0b6d6','#8ecae6','#8ed5a6','#f5a8b8','#f5dfa0','#c4b5fd','#b8d4e3'];
+const MODEL_COLORS = ['#f5a8b8','#f5dfa0','#8ed5a6','#93b5f5','#c4b5fd','#f0b6d6','#8ecae6','#f5c6a0'];
 let hourlyChart, modelChart, dailyChart;
 const userColorMap = {}; // user_name -> fixed color
 
@@ -455,12 +462,12 @@ async function refreshAll() {
     ]);
     document.getElementById('lastUpdate').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
   } catch(e) {
-    console.error('Refresh error:', e);
+    console.error('갱신 오류:', e);
   }
   icon.classList.remove('refresh-spin');
 }
 
-// Auto-refresh every 60 seconds
+// 60초마다 자동 갱신
 refreshAll();
 setInterval(refreshAll, 60000);
 </script>
