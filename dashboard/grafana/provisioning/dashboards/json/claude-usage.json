@@ -28,7 +28,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 1000}, {"color": "#FF8A8A", "value": 1500}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 1000}, {"color": "#f5a8b8", "value": 1500}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -46,7 +46,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 3000000}, {"color": "#FF8A8A", "value": 4500000}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 3000000}, {"color": "#f5a8b8", "value": 4500000}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -64,7 +64,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#56D364", "value": null}, {"color": "#FFBE76", "value": 30}, {"color": "#FF8A8A", "value": 40}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 30}, {"color": "#f5a8b8", "value": 40}] },
           "unit": "h",
           "noValue": "0"
         }
@@ -81,7 +81,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
+          "thresholds": { "steps": [{"color": "#93b5f5", "value": null}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -98,7 +98,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
+          "thresholds": { "steps": [{"color": "#93b5f5", "value": null}] },
           "unit": "short",
           "noValue": "0"
         }
@@ -115,7 +115,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#6CB6FF", "value": null}] },
+          "thresholds": { "steps": [{"color": "#93b5f5", "value": null}] },
           "unit": "h",
           "noValue": "0"
         }
@@ -141,7 +141,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 300}, {"color": "#FF8A8A", "value": 400}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 300}, {"color": "#f5a8b8", "value": 400}] },
           "min": 0,
           "unit": "short",
           "noValue": "0"
@@ -161,7 +161,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 8}, {"color": "#FF8A8A", "value": 10}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 8}, {"color": "#f5a8b8", "value": 10}] },
           "min": 0,
           "unit": "h",
           "noValue": "0"
@@ -181,7 +181,7 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
-          "thresholds": { "steps": [{"color": "#7EE787", "value": null}, {"color": "#FFBE76", "value": 40}, {"color": "#FF8A8A", "value": 50}] },
+          "thresholds": { "steps": [{"color": "#8ed5a6", "value": null}, {"color": "#f5dfa0", "value": 40}, {"color": "#f5a8b8", "value": 50}] },
           "min": 0,
           "unit": "short",
           "noValue": "0"
