@@ -8,306 +8,104 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
-    :root { --api-url: ''; }
-    body { background: #f0f2f5; }
-    .stat-card { border: none; border-radius: 12px; transition: transform .15s; }
-    .stat-card:hover { transform: translateY(-2px); }
+    :root { --pastel-bg: #f5f3ff; --label-color: #8b8fa3; --nav-from: #b8c0ff; --nav-to: #d4bbfc; }
+    body { background: var(--pastel-bg); font-family: 'Segoe UI', system-ui, sans-serif; }
+    .stat-card { border: none; border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.06); }
     .stat-value { font-size: 2rem; font-weight: 700; }
-    .stat-label { font-size: .85rem; color: #6c757d; }
-    .card { border: none; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-    .table th { font-weight: 600; font-size: .85rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
-    .user-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
+    .stat-label { font-size: .85rem; color: var(--label-color); font-weight: 500; }
+    .card { border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+    .table th { font-weight: 600; font-size: .8rem; color: var(--label-color); text-transform: uppercase; letter-spacing: .5px; }
+    .user-badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: .8rem; font-weight: 600; }
     .chart-container { position: relative; height: 300px; }
     .refresh-spin { animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; }
+    .navbar { background: linear-gradient(135deg, var(--nav-from) 0%, var(--nav-to) 100%) !important; }
+    .navbar-brand, .navbar .btn { color: #4a4a6a !important; }
+    .navbar .text-white-50 { color: #6b6b8a !important; }
+    .navbar .btn-outline-light { border-color: #9b9bbb; color: #4a4a6a !important; }
+    .navbar .btn-outline-light:hover { background: rgba(255,255,255,.3); }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .section-title { font-size: .95rem; font-weight: 600; color: #5a5a7a; }
+    .section-title i { color: #c4b5fd; }
+    .table-hover tbody tr:hover { background: #f8f5ff; }
+    code { background: #f0edff; color: #6b5eaa; padding: 2px 6px; border-radius: 4px; font-size: .82rem; }
+    .footer-text { font-size: .75rem; color: var(--label-color); text-align: center; padding: 1rem 0 2rem; }
   </style>
 </head>
 <body>
-
-<nav class="navbar navbar-dark px-3 py-2">
+<nav class="navbar px-3 py-2">
   <div class="container-fluid">
-    <span class="navbar-brand mb-0 h5">
-      <i class="bi bi-speedometer2 me-2"></i>TSP 팀 - Claude 사용량 대시보드
-    </span>
+    <span class="navbar-brand mb-0 h5"><i class="bi bi-speedometer2 me-2"></i>TSP 팀 — Claude 사용량 대시보드</span>
     <div class="d-flex align-items-center gap-3">
-      <small class="text-white-50" id="lastUpdate"></small>
-      <button class="btn btn-outline-light btn-sm" onclick="refreshAll()">
-        <i class="bi bi-arrow-clockwise" id="refreshIcon"></i> 새로고침
-      </button>
+      <small id="lastUpdate"></small>
+      <button class="btn btn-outline-light btn-sm" onclick="refreshAll()"><i class="bi bi-arrow-clockwise" id="refreshIcon"></i> 새로고침</button>
     </div>
   </div>
 </nav>
-
 <div class="container-fluid px-4 py-4">
-
-  <!-- KPI Cards -->
+  <div class="row g-3 mb-3">
+    <div class="col-auto">
+      <div class="card p-2 d-flex flex-row align-items-center gap-2 flex-wrap">
+        <i class="bi bi-calendar3 ms-2"></i>
+        <input type="date" class="form-control form-control-sm" id="dateFrom" style="width:150px;">
+        <span class="text-muted">~</span>
+        <input type="date" class="form-control form-control-sm" id="dateTo" style="width:150px;">
+        <i class="bi bi-person ms-2"></i>
+        <select class="form-select form-select-sm" id="userFilter" style="width:140px;"><option value="">전체 사용자</option></select>
+        <button class="btn btn-sm btn-primary" onclick="applyFilters()">조회</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">오늘</button>
+      </div>
+    </div>
+    <div class="col-auto d-flex align-items-center gap-2">
+      <span class="badge bg-secondary" id="dateLabel">오늘</span>
+      <span class="badge bg-secondary" id="userLabel2" style="display:none;"></span>
+    </div>
+  </div>
   <div class="row g-3 mb-4" id="kpiRow">
-    <div class="col-6 col-md-3">
-      <div class="card stat-card bg-white p-3">
-        <div class="stat-label"><i class="bi bi-chat-dots me-1"></i>오늘 프롬프트</div>
-        <div class="stat-value text-primary" id="todayTurns">-</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card stat-card bg-white p-3">
-        <div class="stat-label"><i class="bi bi-cpu me-1"></i>오늘 토큰</div>
-        <div class="stat-value text-success" id="todayTokens">-</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card stat-card bg-white p-3">
-        <div class="stat-label"><i class="bi bi-calendar-week me-1"></i>이번 주 토큰</div>
-        <div class="stat-value text-info" id="weekTokens">-</div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card stat-card bg-white p-3">
-        <div class="stat-label"><i class="bi bi-calendar-month me-1"></i>이번 달 토큰</div>
-        <div class="stat-value text-warning" id="monthTokens">-</div>
-      </div>
-    </div>
+    <div class="col-6 col-md-3"><div class="card stat-card p-3"><div class="d-flex align-items-center gap-2 mb-2"><div class="kpi-icon" style="background:#e8e0ff;color:#8b7bcf;"><i class="bi bi-chat-dots"></i></div><div class="stat-label">오늘 프롬프트</div></div><div class="stat-value" style="color:#8b7bcf;" id="todayTurns">-</div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card p-3"><div class="d-flex align-items-center gap-2 mb-2"><div class="kpi-icon" style="background:#dcf5e7;color:#5cb87a;"><i class="bi bi-cpu"></i></div><div class="stat-label">오늘 토큰</div></div><div class="stat-value" style="color:#5cb87a;" id="todayTokens">-</div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card p-3"><div class="d-flex align-items-center gap-2 mb-2"><div class="kpi-icon" style="background:#daf0f7;color:#4ea8c8;"><i class="bi bi-calendar-week"></i></div><div class="stat-label">이번 주 토큰</div></div><div class="stat-value" style="color:#4ea8c8;" id="weekTokens">-</div></div></div>
+    <div class="col-6 col-md-3"><div class="card stat-card p-3"><div class="d-flex align-items-center gap-2 mb-2"><div class="kpi-icon" style="background:#fef3d7;color:#d4a843;"><i class="bi bi-calendar-month"></i></div><div class="stat-label">이번 달 토큰</div></div><div class="stat-value" style="color:#d4a843;" id="monthTokens">-</div></div></div>
   </div>
-
-  <!-- Charts Row -->
+  <div class="row g-3 mb-4"><div class="col-lg-8"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-bar-chart me-1"></i>시간대별 사용량 (<span id="hourlyLabel">오늘</span>)</h6><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div></div><div class="col-lg-4"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-pie-chart me-1"></i>모델 분포</h6><div class="chart-container"><canvas id="modelChart"></canvas></div></div></div></div>
+  <div class="row g-3 mb-4"><div class="col-12"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-graph-up me-1"></i>일별 사용량 추이 (최근 30일)</h6><div class="chart-container"><canvas id="dailyChart"></canvas></div></div></div></div>
   <div class="row g-3 mb-4">
-    <div class="col-lg-8">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-bar-chart me-1"></i>시간대별 사용량 (오늘)</h6>
-        <div class="chart-container">
-          <canvas id="hourlyChart"></canvas>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-pie-chart me-1"></i>모델 분포</h6>
-        <div class="chart-container">
-          <canvas id="modelChart"></canvas>
-        </div>
-      </div>
-    </div>
+    <div class="col-lg-6"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-people me-1"></i>사용자별 현황 (<span id="userLabel">오늘</span>)</h6><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>사용자</th><th class="text-end">입력</th><th class="text-end">출력</th><th class="text-end">합계</th><th class="text-end">횟수</th></tr></thead><tbody id="userTable"></tbody></table></div></div></div>
+    <div class="col-lg-6"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-folder me-1"></i>프로젝트별 현황 (<span id="projectLabel">오늘</span>)</h6><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>프로젝트</th><th class="text-end">토큰</th><th class="text-end">횟수</th><th class="text-end">사용자</th></tr></thead><tbody id="projectTable"></tbody></table></div></div></div>
   </div>
-
-  <!-- Daily Trend -->
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-graph-up me-1"></i>일별 사용량 추이 (최근 30일)</h6>
-        <div class="chart-container">
-          <canvas id="dailyChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tables Row -->
-  <div class="row g-3 mb-4">
-    <div class="col-lg-6">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-people me-1"></i>사용자별 현황 (오늘)</h6>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead><tr><th>사용자</th><th class="text-end">입력</th><th class="text-end">출력</th><th class="text-end">합계</th><th class="text-end">횟수</th></tr></thead>
-            <tbody id="userTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-6">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-folder me-1"></i>프로젝트별 현황 (오늘)</h6>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead><tr><th>프로젝트</th><th class="text-end">토큰</th><th class="text-end">횟수</th><th class="text-end">사용자</th></tr></thead>
-            <tbody id="projectTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Recent Activity -->
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="card p-3">
-        <h6 class="mb-3"><i class="bi bi-clock-history me-1"></i>최근 활동</h6>
-        <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="sticky-top bg-white"><tr>
-              <th>시간</th><th>사용자</th><th>프로젝트</th><th>모델</th>
-              <th class="text-end">입력</th><th class="text-end">출력</th><th class="text-end">합계</th>
-            </tr></thead>
-            <tbody id="sessionTable"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <div class="row g-3 mb-4"><div class="col-12"><div class="card p-3"><h6 class="section-title mb-3"><i class="bi bi-clock-history me-1"></i>최근 활동</h6><div class="table-responsive" style="max-height:400px; overflow-y:auto;"><table class="table table-sm table-hover mb-0"><thead class="sticky-top bg-white"><tr><th>시간</th><th>사용자</th><th>프로젝트</th><th>모델</th><th class="text-end">입력</th><th class="text-end">출력</th><th class="text-end">합계</th></tr></thead><tbody id="sessionTable"></tbody></table></div></div></div></div>
 </div>
-
+<div class="footer-text">TSP 팀 Claude 사용량 모니터링 · 60초 자동 갱신</div>
 <script>
 const API = window.location.origin;
-const USER_COLORS = ['#667eea','#f093fb','#4facfe','#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb'];
+const USER_COLORS = ['#93b5f5','#f0b6d6','#8ecae6','#8ed5a6','#f5a8b8','#f5dfa0','#c4b5fd','#b8d4e3'];
+const MODEL_COLORS = ['#f5a8b8','#f5dfa0','#8ed5a6','#93b5f5','#c4b5fd','#f0b6d6','#8ecae6','#f5c6a0'];
 let hourlyChart, modelChart, dailyChart;
-
-function fmt(n) {
-  if (n == null) return '-';
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
-  return n.toLocaleString();
-}
-
-async function api(path) {
-  const r = await fetch(API + path);
-  return r.json();
-}
-
-async function loadKPI() {
-  const [today, week, month, byUser] = await Promise.all([
-    api('/usage/today'), api('/usage/week'), api('/usage/month'), api('/usage/by-user')
-  ]);
-  document.getElementById('todayTokens').textContent = fmt(today.total_tokens);
-  document.getElementById('weekTokens').textContent = fmt(week.total_tokens);
-  document.getElementById('monthTokens').textContent = fmt(month.total_tokens);
-  const totalTurns = byUser.rows.reduce((s, r) => s + r.turn_count, 0);
-  document.getElementById('todayTurns').textContent = fmt(totalTurns);
-}
-
-async function loadUserTable() {
-  const data = await api('/usage/by-user');
-  const tb = document.getElementById('userTable');
-  if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center text-muted">데이터 없음</td></tr>'; return; }
-  tb.innerHTML = data.rows.map((r, i) => `
-    <tr>
-      <td><span class="user-badge" style="background:${USER_COLORS[i % USER_COLORS.length]}20;color:${USER_COLORS[i % USER_COLORS.length]}">${r.user_name}</span></td>
-      <td class="text-end">${fmt(r.input_tokens)}</td>
-      <td class="text-end">${fmt(r.output_tokens)}</td>
-      <td class="text-end fw-bold">${fmt(r.total_tokens)}</td>
-      <td class="text-end">${r.turn_count}</td>
-    </tr>`).join('');
-}
-
-async function loadProjectTable() {
-  const data = await api('/usage/by-project');
-  const tb = document.getElementById('projectTable');
-  if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="4" class="text-center text-muted">데이터 없음</td></tr>'; return; }
-  tb.innerHTML = data.rows.map(r => `
-    <tr>
-      <td><code>${r.project}</code></td>
-      <td class="text-end fw-bold">${fmt(r.total_tokens)}</td>
-      <td class="text-end">${r.turn_count}</td>
-      <td class="text-end">${r.unique_users}</td>
-    </tr>`).join('');
-}
-
-async function loadSessions() {
-  const data = await api('/usage/sessions?limit=200');
-  const tb = document.getElementById('sessionTable');
-  if (!data.rows.length) { tb.innerHTML = '<tr><td colspan="7" class="text-center text-muted">데이터 없음</td></tr>'; return; }
-  tb.innerHTML = data.rows.map(r => {
-    const t = r.created_at ? new Date(r.created_at).toLocaleTimeString('ko-KR') : '-';
-    return `<tr>
-      <td>${t}</td><td>${r.user_name}</td><td><code>${r.project || '-'}</code></td><td><small>${r.model || '-'}</small></td>
-      <td class="text-end">${fmt(r.input_tokens)}</td><td class="text-end">${fmt(r.output_tokens)}</td>
-      <td class="text-end fw-bold">${fmt(r.total_tokens)}</td>
-    </tr>`;
-  }).join('');
-}
-
-async function loadHourlyChart() {
-  const data = await api('/usage/hourly');
-  const users = [...new Set(data.rows.map(r => r.user_name))];
-  const hours = Array.from({length: 24}, (_, i) => i);
-
-  const datasets = users.map((u, i) => ({
-    label: u,
-    data: hours.map(h => {
-      const found = data.rows.find(r => r.user_name === u && Number(r.hour) === h);
-      return found ? found.total_tokens : 0;
-    }),
-    backgroundColor: USER_COLORS[i % USER_COLORS.length] + 'CC',
-    borderRadius: 4,
-  }));
-
-  if (hourlyChart) hourlyChart.destroy();
-  hourlyChart = new Chart(document.getElementById('hourlyChart'), {
-    type: 'bar',
-    data: { labels: hours.map(h => h + '시'), datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => fmt(v) } } }
-    }
-  });
-}
-
-async function loadModelChart() {
-  const data = await api('/usage/by-model');
-  if (modelChart) modelChart.destroy();
-  modelChart = new Chart(document.getElementById('modelChart'), {
-    type: 'doughnut',
-    data: {
-      labels: data.rows.map(r => r.model),
-      datasets: [{ data: data.rows.map(r => r.total_tokens), backgroundColor: USER_COLORS }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
-    }
-  });
-}
-
-async function loadDailyChart() {
-  const data = await api('/usage/daily?days=30');
-  const users = [...new Set(data.rows.map(r => r.user_name))];
-  const days = [...new Set(data.rows.map(r => r.day))].sort();
-
-  const datasets = users.map((u, i) => ({
-    label: u,
-    data: days.map(d => {
-      const found = data.rows.find(r => r.user_name === u && r.day === d);
-      return found ? found.total_tokens : 0;
-    }),
-    borderColor: USER_COLORS[i % USER_COLORS.length],
-    backgroundColor: USER_COLORS[i % USER_COLORS.length] + '20',
-    fill: true, tension: 0.3, pointRadius: 2,
-  }));
-
-  if (dailyChart) dailyChart.destroy();
-  dailyChart = new Chart(document.getElementById('dailyChart'), {
-    type: 'line',
-    data: { labels: days.map(d => d.slice(5)), datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { ticks: { callback: v => fmt(v) } } },
-      interaction: { mode: 'index', intersect: false }
-    }
-  });
-}
-
-async function refreshAll() {
-  const icon = document.getElementById('refreshIcon');
-  icon.classList.add('refresh-spin');
-  try {
-    await Promise.all([
-      loadKPI(), loadUserTable(), loadProjectTable(),
-      loadSessions(), loadHourlyChart(), loadModelChart(), loadDailyChart()
-    ]);
-    document.getElementById('lastUpdate').textContent = '갱신: ' + new Date().toLocaleTimeString('ko-KR');
-  } catch(e) {
-    console.error('Refresh error:', e);
-  }
-  icon.classList.remove('refresh-spin');
-}
-
-// Auto-refresh every 60 seconds
-refreshAll();
-setInterval(refreshAll, 60000);
+const userColorMap = {};
+function getUserColor(u){if(!userColorMap[u]){userColorMap[u]=USER_COLORS[Object.keys(userColorMap).length%USER_COLORS.length];}return userColorMap[u];}
+let selectedDateFrom=null,selectedDateTo=null,selectedUser=null;
+function getToday(){return new Date().toLocaleDateString('sv-SE');}
+function isRangeFilter(){return selectedDateFrom&&selectedDateTo&&selectedDateFrom!==selectedDateTo;}
+function isSingleDate(){return selectedDateFrom&&selectedDateTo&&selectedDateFrom===selectedDateTo;}
+function appendFilters(path){const p=[];if(isRangeFilter()){p.push(`date_from=${selectedDateFrom}`);p.push(`date_to=${selectedDateTo}`);}else if(isSingleDate()){p.push(`date=${selectedDateFrom}`);}if(selectedUser)p.push(`user=${encodeURIComponent(selectedUser)}`);if(!p.length)return path;return path+(path.includes('?')?'&':'?')+p.join('&');}
+function getDateLabel(){if(!selectedDateFrom&&!selectedDateTo)return'오늘';if(selectedDateFrom===getToday()&&selectedDateTo===getToday())return'오늘';if(isSingleDate())return selectedDateFrom;if(isRangeFilter())return`${selectedDateFrom} ~ ${selectedDateTo}`;return'오늘';}
+function applyFilters(){const f=document.getElementById('dateFrom'),t=document.getElementById('dateTo'),u=document.getElementById('userFilter');selectedDateFrom=f.value||getToday();selectedDateTo=t.value||getToday();selectedUser=u.value||null;if(selectedDateFrom>selectedDateTo){[selectedDateFrom,selectedDateTo]=[selectedDateTo,selectedDateFrom];f.value=selectedDateFrom;t.value=selectedDateTo;}const label=getDateLabel();document.getElementById('dateLabel').textContent=label;document.getElementById('dateLabel').className=label==='오늘'?'badge bg-secondary':'badge bg-primary';const ub=document.getElementById('userLabel2');if(selectedUser){ub.textContent=selectedUser;ub.style.display='';ub.className='badge bg-info';}else{ub.style.display='none';}refreshAll();}
+function resetFilters(){selectedDateFrom=null;selectedDateTo=null;selectedUser=null;const today=getToday();document.getElementById('dateFrom').value=today;document.getElementById('dateTo').value=today;document.getElementById('userFilter').value='';document.getElementById('dateLabel').textContent='오늘';document.getElementById('dateLabel').className='badge bg-secondary';document.getElementById('userLabel2').style.display='none';refreshAll();}
+async function loadUserList(){const data=await api('/usage/users');data.users.forEach((u,i)=>{if(!userColorMap[u])userColorMap[u]=USER_COLORS[i%USER_COLORS.length];});const sel=document.getElementById('userFilter');const cur=sel.value;sel.innerHTML='<option value="">전체 사용자</option>'+data.users.map(u=>`<option value="${u}">${u}</option>`).join('');sel.value=cur;}
+function fmt(n){if(n==null)return'-';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n.toLocaleString();}
+async function api(path){return(await fetch(API+path)).json();}
+document.addEventListener('DOMContentLoaded',()=>{const t=getToday();document.getElementById('dateFrom').value=t;document.getElementById('dateTo').value=t;});
+async function loadKPI(){const up=selectedUser?`user=${encodeURIComponent(selectedUser)}`:'';const au=p=>up?p+(p.includes('?')?'&':'?')+up:p;if(isRangeFilter()||isSingleDate()){const d=await api(appendFilters('/usage/by-user'));document.getElementById('todayTurns').textContent=fmt(d.rows.reduce((s,r)=>s+r.turn_count,0));document.getElementById('todayTokens').textContent=fmt(d.rows.reduce((s,r)=>s+r.total_tokens,0));document.getElementById('weekTokens').textContent='-';document.getElementById('monthTokens').textContent='-';}else{const[td,wk,mo,bu]=await Promise.all([api(au('/usage/today')),api(au('/usage/week')),api(au('/usage/month')),api(appendFilters('/usage/by-user'))]);document.getElementById('todayTokens').textContent=fmt(td.total_tokens);document.getElementById('weekTokens').textContent=fmt(wk.total_tokens);document.getElementById('monthTokens').textContent=fmt(mo.total_tokens);document.getElementById('todayTurns').textContent=fmt(bu.rows.reduce((s,r)=>s+r.turn_count,0));}}
+async function loadUserTable(){const data=await api(appendFilters('/usage/by-user'));const tb=document.getElementById('userTable');if(!data.rows.length){tb.innerHTML='<tr><td colspan="5" class="text-center text-muted py-4">데이터 없음</td></tr>';return;}tb.innerHTML=data.rows.map(r=>{const c=getUserColor(r.user_name);return`<tr><td><span class="user-badge" style="background:${c}30;color:${c}"><b>${r.user_name}</b></span></td><td class="text-end">${fmt(r.input_tokens)}</td><td class="text-end">${fmt(r.output_tokens)}</td><td class="text-end fw-bold">${fmt(r.total_tokens)}</td><td class="text-end">${r.turn_count}</td></tr>`;}).join('');}
+async function loadProjectTable(){const data=await api(appendFilters('/usage/by-project'));const tb=document.getElementById('projectTable');if(!data.rows.length){tb.innerHTML='<tr><td colspan="4" class="text-center text-muted py-4">데이터 없음</td></tr>';return;}tb.innerHTML=data.rows.map(r=>`<tr><td><code>${r.project}</code></td><td class="text-end fw-bold">${fmt(r.total_tokens)}</td><td class="text-end">${r.turn_count}</td><td class="text-end">${r.unique_users}</td></tr>`).join('');}
+async function loadSessions(){const data=await api(appendFilters('/usage/sessions?limit=200'));const tb=document.getElementById('sessionTable');if(!data.rows.length){tb.innerHTML='<tr><td colspan="7" class="text-center text-muted py-4">데이터 없음</td></tr>';return;}tb.innerHTML=data.rows.map(r=>{const dt=r.created_at?new Date(r.created_at):null;const t=dt?(isRangeFilter()?dt.toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):dt.toLocaleTimeString('ko-KR')):'-';return`<tr><td>${t}</td><td>${r.user_name}</td><td><code>${r.project||'-'}</code></td><td><small>${r.model||'-'}</small></td><td class="text-end">${fmt(r.input_tokens)}</td><td class="text-end">${fmt(r.output_tokens)}</td><td class="text-end fw-bold">${fmt(r.total_tokens)}</td></tr>`;}).join('');}
+async function loadHourlyChart(){const data=await api(appendFilters('/usage/hourly'));const users=[...new Set(data.rows.map(r=>r.user_name))].sort();const hours=Array.from({length:24},(_,i)=>i);const ds=users.map(u=>({label:u,data:hours.map(h=>{const f=data.rows.find(r=>r.user_name===u&&Number(r.hour)===h);return f?f.total_tokens:0;}),backgroundColor:getUserColor(u)+'BB',borderRadius:6}));if(hourlyChart)hourlyChart.destroy();hourlyChart=new Chart(document.getElementById('hourlyChart'),{type:'bar',data:{labels:hours.map(h=>h+'시'),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyle:'circle',padding:16}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>fmt(v)},grid:{color:'#f0ecff'}}}}});}
+async function loadModelChart(){const data=await api(appendFilters('/usage/by-model'));if(modelChart)modelChart.destroy();modelChart=new Chart(document.getElementById('modelChart'),{type:'doughnut',data:{labels:data.rows.map(r=>r.model),datasets:[{data:data.rows.map(r=>r.total_tokens),backgroundColor:MODEL_COLORS,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:12,usePointStyle:true,pointStyle:'circle'}}}}});}
+async function loadDailyChart(){const data=await api('/usage/daily?days=30');const users=[...new Set(data.rows.map(r=>r.user_name))].sort();const days=[...new Set(data.rows.map(r=>r.day))].sort();const ds=users.map(u=>({label:u,data:days.map(d=>{const f=data.rows.find(r=>r.user_name===u&&r.day===d);return f?f.total_tokens:0;}),borderColor:getUserColor(u),backgroundColor:getUserColor(u)+'25',fill:true,tension:.4,pointRadius:3,pointHoverRadius:6,borderWidth:2}));if(dailyChart)dailyChart.destroy();dailyChart=new Chart(document.getElementById('dailyChart'),{type:'line',data:{labels:days.map(d=>d.slice(5)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{usePointStyle:true,pointStyle:'circle',padding:16}}},scales:{y:{ticks:{callback:v=>fmt(v)},grid:{color:'#f0ecff'}},x:{grid:{display:false}}},interaction:{mode:'index',intersect:false}}});}
+async function refreshAll(){const icon=document.getElementById('refreshIcon');icon.classList.add('refresh-spin');const label=getDateLabel();['hourlyLabel','userLabel','projectLabel'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=label;});try{await Promise.all([loadUserList(),loadKPI(),loadUserTable(),loadProjectTable(),loadSessions(),loadHourlyChart(),loadModelChart(),loadDailyChart()]);document.getElementById('lastUpdate').textContent='갱신: '+new Date().toLocaleTimeString('ko-KR');}catch(e){console.error('갱신 오류:',e);}icon.classList.remove('refresh-spin');}
+refreshAll();setInterval(refreshAll,60000);
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
